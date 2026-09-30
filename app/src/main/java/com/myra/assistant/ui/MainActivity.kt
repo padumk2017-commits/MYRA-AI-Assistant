@@ -10,6 +10,7 @@ import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.myra.assistant.ai.AiBrain
 import com.myra.assistant.audio.MyraSpeaker
 import com.myra.assistant.voice.SpeechRecognizerManager
 
@@ -19,12 +20,14 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var speechRecognizer: SpeechRecognizerManager
     private lateinit var myraSpeaker: MyraSpeaker
+    private lateinit var aiBrain: AiBrain
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         speechRecognizer = SpeechRecognizerManager(this)
         myraSpeaker = MyraSpeaker(this)
+        aiBrain = AiBrain()
 
         showMyraUI()
 
@@ -92,11 +95,18 @@ class MainActivity : ComponentActivity() {
                     status.text = "●  Thinking..."
                     message.text = recognizedText
 
-                    myraSpeaker.speak(
-                        "You said: $recognizedText"
-                    )
+                    aiBrain.process(
+                        recognizedText
+                    ) { aiResponse ->
 
-                    status.text = "●  Speaking..."
+                        runOnUiThread {
+
+                            status.text = "●  Speaking..."
+                            message.text = aiResponse
+
+                            myraSpeaker.speak(aiResponse)
+                        }
+                    }
                 },
 
                 onError = { errorMessage ->
