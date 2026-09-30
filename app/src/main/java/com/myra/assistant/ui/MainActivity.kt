@@ -10,10 +10,14 @@ import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.myra.assistant.audio.AudioRecorder
 
 class MainActivity : ComponentActivity() {
 
     private val microphoneRequestCode = 100
+    private val audioRecorder = AudioRecorder()
+
+    private var isListening = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,6 +76,28 @@ class MainActivity : ComponentActivity() {
         mic.gravity = Gravity.CENTER
         mic.setPadding(40, 30, 40, 30)
 
+        mic.setOnClickListener {
+
+            if (!isListening) {
+
+                audioRecorder.start()
+
+                isListening = true
+                status.text = "●  Listening..."
+                message.text = "MYRA is listening"
+                mic.text = "⏹  STOP LISTENING"
+
+            } else {
+
+                audioRecorder.stop()
+
+                isListening = false
+                status.text = "●  Idle"
+                message.text = "Hello, I am MYRA"
+                mic.text = "🎙  TAP TO TALK"
+            }
+        }
+
         root.addView(title)
         root.addView(status)
         root.addView(orb)
@@ -79,5 +105,10 @@ class MainActivity : ComponentActivity() {
         root.addView(mic)
 
         setContentView(root)
+    }
+
+    override fun onDestroy() {
+        audioRecorder.stop()
+        super.onDestroy()
     }
 }
