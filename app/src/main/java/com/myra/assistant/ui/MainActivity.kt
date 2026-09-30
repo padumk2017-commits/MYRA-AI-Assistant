@@ -10,21 +10,20 @@ import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.myra.assistant.audio.AudioRecorder
 import com.myra.assistant.audio.MyraSpeaker
+import com.myra.assistant.voice.SpeechRecognizerManager
 
 class MainActivity : ComponentActivity() {
 
     private val microphoneRequestCode = 100
 
-    private val audioRecorder = AudioRecorder()
+    private lateinit var speechRecognizer: SpeechRecognizerManager
     private lateinit var myraSpeaker: MyraSpeaker
-
-    private var isListening = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        speechRecognizer = SpeechRecognizerManager(this)
         myraSpeaker = MyraSpeaker(this)
 
         showMyraUI()
@@ -83,28 +82,33 @@ class MainActivity : ComponentActivity() {
 
         mic.setOnClickListener {
 
-            if (!isListening) {
+            status.text = "●  Listening..."
+            message.text = "Listening..."
 
-                audioRecorder.start()
+            speechRecognizer.startListening(
 
-                isListening = true
-                status.text = "●  Listening..."
-                message.text = "MYRA is listening"
-                mic.text = "⏹  STOP LISTENING"
+                onResult = { recognizedText ->
 
-            } else {
+                    status.text = "●  Thinking..."
+                    message.text = recognizedText
 
-                audioRecorder.stop()
+                    myraSpeaker.speak(
+                        "You said: $recognizedText"
+                    )
 
-                isListening = false
-                status.text = "●  Speaking..."
-                message.text = "Hello! I am MYRA."
-                mic.text = "🎙  TAP TO TALK"
+                    status.text = "●  Speaking..."
+                },
 
-                myraSpeaker.speak(
-                    "Hello! I am MYRA. How can I help you?"
-                )
-            }
+                onError = { errorMessage ->
+
+                    status.text = "●  Idle"
+                    message.text = errorMessage
+
+                    myraSpeaker.speak(
+                        "Sorry, I did not understand."
+                    )
+                }
+            )
         }
 
         root.addView(title)
@@ -117,7 +121,7 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
-        audioRecorder.stop()
+        speechRecognizer.destroy()
         myraSpeaker.release()
         super.onDestroy()
     }
