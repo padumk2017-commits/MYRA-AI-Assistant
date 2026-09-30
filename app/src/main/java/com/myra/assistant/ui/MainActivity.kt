@@ -2,8 +2,8 @@ package com.myra.assistant.ui
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.os.Bundle
 import android.graphics.Color
+import android.os.Bundle
 import android.view.Gravity
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -11,16 +11,21 @@ import androidx.activity.ComponentActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.myra.assistant.audio.AudioRecorder
+import com.myra.assistant.audio.MyraSpeaker
 
 class MainActivity : ComponentActivity() {
 
     private val microphoneRequestCode = 100
+
     private val audioRecorder = AudioRecorder()
+    private lateinit var myraSpeaker: MyraSpeaker
 
     private var isListening = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        myraSpeaker = MyraSpeaker(this)
 
         showMyraUI()
 
@@ -92,9 +97,13 @@ class MainActivity : ComponentActivity() {
                 audioRecorder.stop()
 
                 isListening = false
-                status.text = "●  Idle"
-                message.text = "Hello, I am MYRA"
+                status.text = "●  Speaking..."
+                message.text = "Hello! I am MYRA."
                 mic.text = "🎙  TAP TO TALK"
+
+                myraSpeaker.speak(
+                    "Hello! I am MYRA. How can I help you?"
+                )
             }
         }
 
@@ -109,6 +118,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         audioRecorder.stop()
+        myraSpeaker.release()
         super.onDestroy()
     }
 }
